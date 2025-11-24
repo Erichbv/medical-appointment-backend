@@ -7,7 +7,9 @@
     "dev": "serverless offline start",
     "deploy:dev": "serverless deploy --stage dev",
     "deploy:prod": "serverless deploy --stage prod",
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "test:pe": "tsx tests/manual/test-pe-connection.ts",
+    "test:cl": "tsx tests/manual/test-cl-connection.ts"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +23,7 @@
     "serverless-offline": "^14.4.0",
     "ts-jest": "^29.4.5",
     "ts-node": "^10.9.2",
+    "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   },
   "dependencies": {
@@ -28,5 +31,9 @@
     "aws-sdk": "^2.1692.0",
     "joi": "^18.0.2",
     "uuid": "^13.0.0"
+  },
+  "exports": {
+    "@prisma/client-pe": "./src/node_modules/.prisma/client-pe/index.js",
+    "@prisma/client-cl": "./src/node_modules/.prisma/client-cl/index.js"
   }
 }

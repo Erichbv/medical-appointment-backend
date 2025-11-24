@@ -8,7 +8,7 @@ import { getPrismaClClient } from "../../../infrastructure/rds/prisma/clientCl.j
 const parseSQSMessage = (record: SQSRecord): AppointmentRequestedEvent => {
   const body = JSON.parse(record.body);
   
-  // Si el mensaje viene de SNS, el payload está en body.Message
+  // if the message comes from SNS, the payload is in body.Message
   const message = body.Message ? JSON.parse(body.Message) : body;
 
   return {

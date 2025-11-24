@@ -40,5 +40,13 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@prisma/client-pe": ["./src/node_modules/.prisma/client-pe/index.js"],
+      "@prisma/client-cl": ["./src/node_modules/.prisma/client-cl/index.js"]
+    }
+  },
+  "ts-node": {
+    "esm": true
   }
 }
