@@ -1,0 +1,19 @@
+generator prisma_pe {
+  provider = "prisma-client-js"
+  output   = "../../../node_modules/.prisma/client-pe"
+}
+
+datasource db_pe {
+  provider = "mysql"
+  url      = env("DATABASE_URL_PE")
+}
+
+model Appointment {
+  id        Int      @id @default(autoincrement())
+  insuredId String
+  scheduleId Int
+  countryISO String  @db_pe.Char(2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
