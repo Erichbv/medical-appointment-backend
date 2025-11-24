@@ -1,0 +1,65 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["cloudformation:*"],
+      "Resource": ["arn:aws:cloudformation:us-east-1:845958740574:stack/medical-appointment-backend-dev*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["lambda:*"],
+      "Resource": ["arn:aws:lambda:us-east-1:845958740574:function:medical-appointment-backend-dev-*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["apigateway:*"],
+      "Resource": ["arn:aws:apigateway:us-east-1::/restapis/*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["dynamodb:*"],
+      "Resource": ["arn:aws:dynamodb:us-east-1:845958740574:table/Appointments*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["sns:*"],
+      "Resource": ["arn:aws:sns:us-east-1:845958740574:appointment-topic*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["sqs:*"],
+      "Resource": ["arn:aws:sqs:us-east-1:845958740574:appointments-*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["events:*"],
+      "Resource": ["arn:aws:events:us-east-1:845958740574:rule/medical-appointment-backend-dev-*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["s3:*"],
+      "Resource": ["arn:aws:s3:::medical-appointment-backend-*", "arn:aws:s3:::medical-appointment-backend-*/*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["iam:CreateRole", "iam:DeleteRole", "iam:GetRole", "iam:PutRolePolicy", "iam:DeleteRolePolicy", "iam:AttachRolePolicy", "iam:DetachRolePolicy", "iam:PassRole"],
+      "Resource": ["arn:aws:iam::845958740574:role/medical-appointment-backend-dev-*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["logs:*"],
+      "Resource": ["arn:aws:logs:us-east-1:845958740574:log-group:/aws/lambda/medical-appointment-backend-dev-*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["ssm:*"],
+      "Resource": ["arn:aws:ssm:us-east-1:845958740574:parameter/serverless-framework/*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["cloudformation:Describe*", "cloudformation:List*", "cloudformation:Get*", "cloudformation:Validate*", "lambda:List*", "lambda:Get*", "apigateway:GET", "dynamodb:List*", "dynamodb:Describe*", "sns:List*", "sns:Get*", "sqs:List*", "sqs:Get*", "events:List*", "events:Describe*", "s3:List*", "s3:Get*", "s3:Head*", "iam:List*", "iam:Get*", "logs:Describe*", "ssm:Get*", "ssm:Describe*", "tag:*", "sts:GetCallerIdentity"],
+      "Resource": "*"
+    }
+  ]
+}

@@ -66,3 +66,5 @@ export const handler = async (event: SQSEvent): Promise<void> => {
   await Promise.all(promises);
 };
 
+export const main = handler;
+
