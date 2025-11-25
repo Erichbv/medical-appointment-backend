@@ -9,6 +9,24 @@ const serverlessConfiguration = {
       name: "medical-appointment-backend-deployments-dev",
     },
   },
+  package: {
+    individually: false,
+    patterns: [
+      // Include binaries of Prisma for Lambda (rhel-openssl-3.0.x)
+      "src/node_modules/.prisma/client-pe/**",
+      "src/node_modules/.prisma/client-cl/**",
+      // Include client of Prisma
+      "node_modules/@prisma/client/**",
+      "node_modules/.prisma/**",
+      // Exclude unnecessary binaries to reduce size
+      "!node_modules/@prisma/engines/**",
+      "!**/*.map",
+      "!**/*.ts",
+      "!**/*.test.*",
+      "!**/*.spec.*",
+      "!**/query_engine-windows.dll.node", // Exclude Windows binary
+    ],
+  },
   functions: {
     appointment: {
       handler: "src/interfaces/lambdas/appointment/handler.main",
@@ -67,6 +85,7 @@ const serverlessConfiguration = {
                 "dynamodb:PutItem",
                 "dynamodb:GetItem",
                 "dynamodb:Query",
+                "dynamodb:UpdateItem",
               ],
               Resource: {
                 "Fn::GetAtt": ["AppointmentsTable", "Arn"],
@@ -112,14 +131,24 @@ const serverlessConfiguration = {
       handler: "src/interfaces/lambdas/appointmentPe/handler.main",
       runtime: "nodejs20.x",
       memorySize: 512,
-      timeout: 20,
+      timeout: 30,
+      // VPC configuration for RDS access
+      vpc: {
+        securityGroupIds: [
+          "${env:LAMBDA_SECURITY_GROUP_ID}",
+        ],
+        subnetIds: [
+          "${env:SUBNET_ID_1}",
+          "${env:SUBNET_ID_2}",
+        ],
+      },
       events: [
         {
           sqs: {
             arn: {
               "Fn::GetAtt": ["AppointmentsPeQueue", "Arn"],
             },
-            batchSize: 10,
+            batchSize: 5,
           },
         },
       ],
@@ -137,14 +166,32 @@ const serverlessConfiguration = {
               Action: [
                 "sqs:ReceiveMessage",
                 "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
               ],
-              Resource: {
-                "Fn::GetAtt": ["AppointmentsPeQueue", "Arn"],
-              },
+              Resource: [
+                {
+                  "Fn::GetAtt": ["AppointmentsPeQueue", "Arn"],
+                },
+                {
+                  "Fn::GetAtt": ["AppointmentsPeQueueDLQ", "Arn"],
+                },
+              ],
             },
             {
               Effect: "Allow",
               Action: ["events:PutEvents"],
+              Resource: "*",
+            },
+            // VPC permissions - required if Lambda is in VPC
+            {
+              Effect: "Allow",
+              Action: [
+                "ec2:CreateNetworkInterface",
+                "ec2:DescribeNetworkInterfaces",
+                "ec2:DeleteNetworkInterface",
+                "ec2:AssignPrivateIpAddresses",
+                "ec2:UnassignPrivateIpAddresses",
+              ],
               Resource: "*",
             },
           ],
@@ -155,14 +202,24 @@ const serverlessConfiguration = {
       handler: "src/interfaces/lambdas/appointmentCl/handler.main",
       runtime: "nodejs20.x",
       memorySize: 512,
-      timeout: 20,
+      timeout: 30,
+      // VPC configuration for RDS access
+      vpc: {
+        securityGroupIds: [
+          "${env:LAMBDA_SECURITY_GROUP_ID}",
+        ],
+        subnetIds: [
+          "${env:SUBNET_ID_1}",
+          "${env:SUBNET_ID_2}",
+        ],
+      },
       events: [
         {
           sqs: {
             arn: {
               "Fn::GetAtt": ["AppointmentsClQueue", "Arn"],
             },
-            batchSize: 10,
+            batchSize: 5,
           },
         },
       ],
@@ -180,14 +237,32 @@ const serverlessConfiguration = {
               Action: [
                 "sqs:ReceiveMessage",
                 "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
               ],
-              Resource: {
-                "Fn::GetAtt": ["AppointmentsClQueue", "Arn"],
-              },
+              Resource: [
+                {
+                  "Fn::GetAtt": ["AppointmentsClQueue", "Arn"],
+                },
+                {
+                  "Fn::GetAtt": ["AppointmentsClQueueDLQ", "Arn"],
+                },
+              ],
             },
             {
               Effect: "Allow",
               Action: ["events:PutEvents"],
+              Resource: "*",
+            },
+            // VPC permissions - required if Lambda is in VPC
+            {
+              Effect: "Allow",
+              Action: [
+                "ec2:CreateNetworkInterface",
+                "ec2:DescribeNetworkInterfaces",
+                "ec2:DeleteNetworkInterface",
+                "ec2:AssignPrivateIpAddresses",
+                "ec2:UnassignPrivateIpAddresses",
+              ],
               Resource: "*",
             },
           ],
@@ -235,6 +310,22 @@ const serverlessConfiguration = {
         DependsOn: ["AppointmentTopic"],
         Properties: {
           QueueName: "appointments-pe-queue",
+          VisibilityTimeout: 60,
+          MessageRetentionPeriod: 1209600,
+          ReceiveMessageWaitTimeSeconds: 20,
+          RedrivePolicy: {
+            deadLetterTargetArn: {
+              "Fn::GetAtt": ["AppointmentsPeQueueDLQ", "Arn"],
+            },
+            maxReceiveCount: 3,
+          },
+        },
+      },
+      AppointmentsPeQueueDLQ: {
+        Type: "AWS::SQS::Queue",
+        Properties: {
+          QueueName: "appointments-pe-queue-dlq",
+          MessageRetentionPeriod: 1209600,
         },
       },
       AppointmentsPeQueuePolicy: {
@@ -274,6 +365,22 @@ const serverlessConfiguration = {
         DependsOn: ["AppointmentTopic"],
         Properties: {
           QueueName: "appointments-cl-queue",
+          VisibilityTimeout: 60,
+          MessageRetentionPeriod: 1209600,
+          ReceiveMessageWaitTimeSeconds: 20,
+          RedrivePolicy: {
+            deadLetterTargetArn: {
+              "Fn::GetAtt": ["AppointmentsClQueueDLQ", "Arn"],
+            },
+            maxReceiveCount: 3,
+          },
+        },
+      },
+      AppointmentsClQueueDLQ: {
+        Type: "AWS::SQS::Queue",
+        Properties: {
+          QueueName: "appointments-cl-queue-dlq",
+          MessageRetentionPeriod: 1209600,
         },
       },
       AppointmentsClQueuePolicy: {

@@ -8,9 +8,11 @@
     "deploy:dev": "serverless deploy --stage dev",
     "deploy:prod": "serverless deploy --stage prod",
     "test": "jest --runInBand",
-    "test:pe": "tsx tests/manual/test-pe-connection.ts",
-    "test:cl": "tsx tests/manual/test-cl-connection.ts",
-    "test:sns": "tsx tests/manual/test-sns-diagnostics.ts"
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "format": "prettier --write \"**/*.{ts,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,json,md}\"",
+    "type-check": "tsc --noEmit"
   },
   "keywords": [],
   "author": "",
@@ -18,7 +20,11 @@
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/node": "^24.10.1",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
     "jest": "^30.2.0",
+    "prettier": "^3.2.5",
     "prisma": "^6.0.0",
     "serverless": "^4.25.0",
     "serverless-offline": "^14.4.0",
@@ -29,7 +35,9 @@
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.939.0",
+    "@aws-sdk/client-ec2": "^3.939.0",
     "@aws-sdk/client-eventbridge": "^3.939.0",
+    "@aws-sdk/client-rds": "^3.939.0",
     "@aws-sdk/client-sns": "^3.939.0",
     "@aws-sdk/client-sqs": "^3.939.0",
     "@aws-sdk/lib-dynamodb": "^3.939.0",

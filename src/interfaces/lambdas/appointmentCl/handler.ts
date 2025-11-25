@@ -64,9 +64,21 @@ export const main = async (event: SQSEvent): Promise<{ statusCode: number }> => 
       await repo.saveToRds(appointment);
       console.log("✅ [appointmentCl] Cita guardada en RDS CL");
 
-      console.log("📨 [appointmentCl] Publicando evento de cita completada...");
-      await useCase.execute(appointment);
-      console.log("✅ [appointmentCl] Evento publicado exitosamente");
+      // Publicar evento de forma no bloqueante
+      // Si falla, no debe afectar el procesamiento principal
+      // El mensaje se eliminará de SQS porque el procesamiento principal fue exitoso
+      try {
+        console.log("📨 [appointmentCl] Publicando evento de cita completada...");
+        await useCase.execute(appointment);
+        console.log("✅ [appointmentCl] Evento publicado exitosamente");
+      } catch (eventError) {
+        console.error("⚠️ [appointmentCl] Error publicando evento (no crítico):", {
+          error: eventError instanceof Error ? eventError.message : String(eventError),
+          appointmentId: appointment.appointmentId,
+        });
+        // Continuar aunque falle la publicación del evento
+        // El mensaje se eliminará de SQS porque el procesamiento principal fue exitoso
+      }
     } catch (error) {
       console.error("❌ [appointmentCl] Error procesando record SQS:", {
         error: error instanceof Error ? error.message : String(error),

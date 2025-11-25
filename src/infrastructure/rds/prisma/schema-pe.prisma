@@ -1,6 +1,7 @@
 generator prisma_pe {
   provider = "prisma-client-js"
   output   = "../../../node_modules/.prisma/client-pe"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db_pe {

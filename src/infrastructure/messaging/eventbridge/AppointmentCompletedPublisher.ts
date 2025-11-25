@@ -38,11 +38,22 @@ export class AppointmentCompletedPublisher {
       entry.EventBusName = this.eventBusName;
     }
 
-    await this.client.send(
-      new PutEventsCommand({
-        Entries: [entry],
-      })
-    );
+    // Timeout de 5 segundos para evitar que se quede esperando indefinidamente
+    // si no hay conectividad desde VPC a EventBridge
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error("EventBridge publish timeout after 5 seconds"));
+      }, 5000);
+    });
+
+    await Promise.race([
+      this.client.send(
+        new PutEventsCommand({
+          Entries: [entry],
+        })
+      ),
+      timeoutPromise,
+    ]);
   }
 }
 

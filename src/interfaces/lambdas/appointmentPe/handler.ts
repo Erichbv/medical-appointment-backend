@@ -26,7 +26,7 @@ export const main = async (event: SQSEvent): Promise<{ statusCode: number }> => 
         bodyPreview: record.body.substring(0, 200),
       });
 
-      // SNS envuelve el mensaje en un objeto de notificación
+      // SNS wraps the message in a notification object
       const snsMessage = JSON.parse(record.body);
       console.log("📦 [appointmentPe] Mensaje SNS parseado:", {
         snsMessageKeys: Object.keys(snsMessage),
@@ -35,7 +35,7 @@ export const main = async (event: SQSEvent): Promise<{ statusCode: number }> => 
         messageAttributes: snsMessage.MessageAttributes,
       });
 
-      // El mensaje real está en el campo Message
+      // the real message is in the Message field
       const body = JSON.parse(snsMessage.Message);
       console.log("📊 [appointmentPe] Datos de la cita extraídos:", {
         appointmentId: body.appointmentId,
@@ -64,9 +64,18 @@ export const main = async (event: SQSEvent): Promise<{ statusCode: number }> => 
       await repo.saveToRds(appointment);
       console.log("✅ [appointmentPe] Cita guardada en RDS PE");
 
-      console.log("📨 [appointmentPe] Publicando evento de cita completada...");
-      await useCase.execute(appointment);
-      console.log("✅ [appointmentPe] Evento publicado exitosamente");
+      
+      try {
+        console.log("📨 [appointmentPe] Publicando evento de cita completada...");
+        await useCase.execute(appointment);
+        console.log("✅ [appointmentPe] Evento publicado exitosamente");
+      } catch (eventError) {
+        console.error("⚠️ [appointmentPe] Error publicando evento (no crítico):", {
+          error: eventError instanceof Error ? eventError.message : String(eventError),
+          appointmentId: appointment.appointmentId,
+        });
+       
+      }
     } catch (error) {
       console.error("❌ [appointmentPe] Error procesando record SQS:", {
         error: error instanceof Error ? error.message : String(error),
@@ -74,8 +83,6 @@ export const main = async (event: SQSEvent): Promise<{ statusCode: number }> => 
         recordBody: record.body,
         messageId: record.messageId,
       });
-      // Continuar procesando otros records aunque uno falle
-      // El mensaje fallido volverá a la cola para reintento
     }
   }
 
