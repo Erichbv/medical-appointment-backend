@@ -1,13 +1,13 @@
 import type { Appointment } from "../../domain/entities/Appointment.js";
-import type { AppointmentReadRepository } from "../../domain/repositories/AppointmentReadRepository.js";
+import type { AppointmentDynamoRepository } from "../../infrastructure/dynamodb/AppointmentDynamoRepository.js";
 
 export class GetAppointmentsByInsuredUseCase {
   constructor(
-    private readonly appointmentReadRepository: AppointmentReadRepository
+    private readonly appointmentRepo: AppointmentDynamoRepository
   ) {}
 
   async execute(insuredId: string): Promise<Appointment[]> {
-    return await this.appointmentReadRepository.findByInsuredId(insuredId);
+    return await this.appointmentRepo.findByInsuredId(insuredId);
   }
 }
 

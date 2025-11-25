@@ -227,3 +227,5 @@ La arquitectura implementa seguridad en múltiples capas:
 
 Esta arquitectura representa un equilibrio óptimo entre rendimiento, escalabilidad, mantenibilidad y costo, siguiendo las mejores prácticas de la industria para sistemas distribuidos en la nube.
 
+
+

@@ -1,15 +1,12 @@
-import type { AppointmentWriteRepository } from "../../domain/repositories/AppointmentWriteRepository.js";
+import type { AppointmentDynamoRepository } from "../../infrastructure/dynamodb/AppointmentDynamoRepository.js";
 
 export class CompleteAppointmentUseCase {
   constructor(
-    private readonly appointmentWriteRepository: AppointmentWriteRepository
+    private readonly appointmentRepo: AppointmentDynamoRepository
   ) {}
 
   async execute(appointmentId: string, insuredId: string): Promise<void> {
-    await this.appointmentWriteRepository.markCompleted(
-      appointmentId,
-      insuredId
-    );
+    await this.appointmentRepo.markCompleted(appointmentId, insuredId);
   }
 }
 

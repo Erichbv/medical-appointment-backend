@@ -30,6 +30,14 @@ const serverlessConfiguration = {
             cors: true,
           },
         },
+        {
+          sqs: {
+            arn: {
+              "Fn::GetAtt": ["AppointmentsConfirmationQueue", "Arn"],
+            },
+            batchSize: 10,
+          },
+        },
       ],
       environment: {
         APPOINTMENTS_TABLE: {
@@ -86,6 +94,16 @@ const serverlessConfiguration = {
                 },
               ],
             },
+            {
+              Effect: "Allow",
+              Action: [
+                "sqs:ReceiveMessage",
+                "sqs:DeleteMessage",
+              ],
+              Resource: {
+                "Fn::GetAtt": ["AppointmentsConfirmationQueue", "Arn"],
+              },
+            },
           ],
         },
       },
@@ -114,6 +132,16 @@ const serverlessConfiguration = {
       iam: {
         role: {
           statements: [
+            {
+              Effect: "Allow",
+              Action: [
+                "sqs:ReceiveMessage",
+                "sqs:DeleteMessage",
+              ],
+              Resource: {
+                "Fn::GetAtt": ["AppointmentsPeQueue", "Arn"],
+              },
+            },
             {
               Effect: "Allow",
               Action: ["events:PutEvents"],
@@ -147,6 +175,16 @@ const serverlessConfiguration = {
       iam: {
         role: {
           statements: [
+            {
+              Effect: "Allow",
+              Action: [
+                "sqs:ReceiveMessage",
+                "sqs:DeleteMessage",
+              ],
+              Resource: {
+                "Fn::GetAtt": ["AppointmentsClQueue", "Arn"],
+              },
+            },
             {
               Effect: "Allow",
               Action: ["events:PutEvents"],
@@ -315,6 +353,7 @@ const serverlessConfiguration = {
           FilterPolicy: {
             countryISO: ["PE"],
           },
+          FilterPolicyScope: "MessageAttributes",
         },
       },
       AppointmentTopicSubscriptionCl: {
@@ -331,6 +370,7 @@ const serverlessConfiguration = {
           FilterPolicy: {
             countryISO: ["CL"],
           },
+          FilterPolicyScope: "MessageAttributes",
         },
       },
       AppointmentCompletedRule: {

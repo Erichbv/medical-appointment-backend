@@ -9,7 +9,8 @@
     "deploy:prod": "serverless deploy --stage prod",
     "test": "jest --runInBand",
     "test:pe": "tsx tests/manual/test-pe-connection.ts",
-    "test:cl": "tsx tests/manual/test-cl-connection.ts"
+    "test:cl": "tsx tests/manual/test-cl-connection.ts",
+    "test:sns": "tsx tests/manual/test-sns-diagnostics.ts"
   },
   "keywords": [],
   "author": "",
@@ -27,6 +28,11 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.939.0",
+    "@aws-sdk/client-eventbridge": "^3.939.0",
+    "@aws-sdk/client-sns": "^3.939.0",
+    "@aws-sdk/client-sqs": "^3.939.0",
+    "@aws-sdk/lib-dynamodb": "^3.939.0",
     "@prisma/client": "^6.0.0",
     "aws-sdk": "^2.1692.0",
     "joi": "^18.0.2",
