@@ -7,11 +7,11 @@ import { PublishAppointmentCompletedUseCase } from "../../../application/usecase
 
 export const main = async (event: SQSEvent): Promise<{ statusCode: number }> => {
   if (!event.Records) {
-    console.log("⚠️ [appointmentPe] No hay records en el evento SQS");
+    console.log("[appointmentPe] No hay records en el evento SQS");
     return { statusCode: 200 };
   }
 
-  console.log("📥 [appointmentPe] Procesando evento SQS:", {
+  console.log("[appointmentPe] Procesando evento SQS:", {
     recordCount: event.Records.length,
     records: event.Records.map((r: SQSRecord) => ({
       messageId: r.messageId,
@@ -21,14 +21,14 @@ export const main = async (event: SQSEvent): Promise<{ statusCode: number }> => 
 
   for (const record of event.Records) {
     try {
-      console.log("📨 [appointmentPe] Procesando record:", {
+      console.log("[appointmentPe] Procesando record:", {
         messageId: record.messageId,
         bodyPreview: record.body.substring(0, 200),
       });
 
       // SNS wraps the message in a notification object
       const snsMessage = JSON.parse(record.body);
-      console.log("📦 [appointmentPe] Mensaje SNS parseado:", {
+      console.log("[appointmentPe] Mensaje SNS parseado:", {
         snsMessageKeys: Object.keys(snsMessage),
         hasMessage: !!snsMessage.Message,
         hasMessageAttributes: !!snsMessage.MessageAttributes,
@@ -37,7 +37,7 @@ export const main = async (event: SQSEvent): Promise<{ statusCode: number }> => 
 
       // the real message is in the Message field
       const body = JSON.parse(snsMessage.Message);
-      console.log("📊 [appointmentPe] Datos de la cita extraídos:", {
+      console.log("[appointmentPe] Datos de la cita extraídos:", {
         appointmentId: body.appointmentId,
         insuredId: body.insuredId,
         scheduleId: body.scheduleId,
@@ -60,24 +60,24 @@ export const main = async (event: SQSEvent): Promise<{ statusCode: number }> => 
       const eventPublisher = new AppointmentCompletedPublisher();
       const useCase = new PublishAppointmentCompletedUseCase(eventPublisher);
 
-      console.log("💾 [appointmentPe] Guardando cita en RDS PE...");
+      console.log("[appointmentPe] Guardando cita en RDS PE...");
       await repo.saveToRds(appointment);
-      console.log("✅ [appointmentPe] Cita guardada en RDS PE");
+      console.log("[appointmentPe] Cita guardada en RDS PE");
 
       
       try {
-        console.log("📨 [appointmentPe] Publicando evento de cita completada...");
+        console.log("[appointmentPe] Publicando evento de cita completada...");
         await useCase.execute(appointment);
-        console.log("✅ [appointmentPe] Evento publicado exitosamente");
+        console.log("[appointmentPe] Evento publicado exitosamente");
       } catch (eventError) {
-        console.error("⚠️ [appointmentPe] Error publicando evento (no crítico):", {
+        console.error("[appointmentPe] Error publicando evento (no crítico):", {
           error: eventError instanceof Error ? eventError.message : String(eventError),
           appointmentId: appointment.appointmentId,
         });
        
       }
     } catch (error) {
-      console.error("❌ [appointmentPe] Error procesando record SQS:", {
+      console.error(" [appointmentPe] Error procesando record SQS:", {
         error: error instanceof Error ? error.message : String(error),
         errorStack: error instanceof Error ? error.stack : undefined,
         recordBody: record.body,
@@ -86,7 +86,7 @@ export const main = async (event: SQSEvent): Promise<{ statusCode: number }> => 
     }
   }
 
-  console.log("✅ [appointmentPe] Procesamiento de evento SQS completado");
+  console.log("[appointmentPe] Procesamiento de evento SQS completado");
   return { statusCode: 200 };
 };
 

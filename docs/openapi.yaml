@@ -1,0 +1,225 @@
+openapi: 3.0.3
+info:
+  title: Reto Técnico - API de Citas Médicas
+  description: >
+    API REST serverless para registro y consulta de citas médicas multi-país (PE / CL).
+    Implementada con AWS Lambda, API Gateway, DynamoDB, RDS MySQL, SNS, SQS y EventBridge.
+  version: 1.0.0
+
+servers:
+  - url: https://{apiId}.execute-api.{region}.amazonaws.com/dev
+    description: Entorno dev desplegado en AWS
+    variables:
+      apiId:
+        default: your-api-id
+      region:
+        default: us-east-1
+
+paths:
+  /appointments:
+    post:
+      summary: Registrar una cita médica
+      description: >
+        Registra una nueva cita para un asegurado. La cita se almacena inicialmente
+        en DynamoDB con estado `pending` y se inicia el flujo de procesamiento
+        asincrónico para agendarla en el país correspondiente (PE / CL).
+      operationId: createAppointment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAppointmentRequest'
+            examples:
+              ejemplo:
+                summary: Ejemplo de creación de cita
+                value:
+                  insuredId: "00001"
+                  scheduleId: 100
+                  countryISO: "PE"
+      responses:
+        '201':
+          description: Cita registrada correctamente y enviada a procesamiento.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateAppointmentResponse'
+              examples:
+                ejemplo:
+                  value:
+                    message: "Cita registrada y en proceso de agendamiento"
+                    appointmentId: "3c6c9b1e-6f7e-4c7f-b3f4-123456789abc"
+                    status: "pending"
+        '400':
+          description: Error de validación en los datos enviados.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                ejemplo:
+                  value:
+                    message: "Los datos enviados no son válidos"
+        '500':
+          description: Error interno del servidor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                ejemplo:
+                  value:
+                    message: "Se produjo un error inesperado al registrar la cita"
+
+  /appointments/{insuredId}:
+    get:
+      summary: Listar citas por asegurado
+      description: >
+        Devuelve todas las citas asociadas a un asegurado, con su estado actual.
+        La información se obtiene desde DynamoDB, donde se refleja el estado
+        `pending` o `completed` según el avance del flujo.
+      operationId: getAppointmentsByInsured
+      parameters:
+        - name: insuredId
+          in: path
+          required: true
+          description: Identificador del asegurado.
+          schema:
+            type: string
+            example: "00001"
+      responses:
+        '200':
+          description: Lista de citas del asegurado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentsByInsuredResponse'
+              examples:
+                ejemplo:
+                  value:
+                    insuredId: "00001"
+                    appointments:
+                      - appointmentId: "3c6c9b1e-6f7e-4c7f-b3f4-123456789abc"
+                        scheduleId: 100
+                        countryISO: "PE"
+                        status: "completed"
+                        createdAt: "2025-11-24T10:00:00.000Z"
+                        updatedAt: "2025-11-24T10:02:30.000Z"
+        '404':
+          description: No se encontraron citas para el asegurado indicado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                ejemplo:
+                  value:
+                    message: "No se encontraron citas para el asegurado especificado"
+        '500':
+          description: Error interno del servidor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                ejemplo:
+                  value:
+                    message: "Se produjo un error inesperado al consultar las citas"
+
+
+components:
+  schemas:
+    CreateAppointmentRequest:
+      type: object
+      required:
+        - insuredId
+        - scheduleId
+        - countryISO
+      properties:
+        insuredId:
+          type: string
+          description: Identificador del asegurado.
+          example: "00001"
+        scheduleId:
+          type: integer
+          format: int32
+          description: Identificador del horario seleccionado.
+          example: 100
+        countryISO:
+          type: string
+          description: Código de país en formato ISO2.
+          enum:
+            - PE
+            - CL
+          example: "PE"
+
+    CreateAppointmentResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Mensaje informativo en español.
+          example: "Cita registrada y en proceso de agendamiento"
+        appointmentId:
+          type: string
+          format: uuid
+          description: Identificador único de la cita.
+          example: "3c6c9b1e-6f7e-4c7f-b3f4-123456789abc"
+        status:
+          type: string
+          description: Estado actual de la cita en el flujo.
+          enum:
+            - pending
+            - completed
+          example: "pending"
+
+    AppointmentItem:
+      type: object
+      properties:
+        appointmentId:
+          type: string
+          format: uuid
+          description: Identificador único de la cita.
+        scheduleId:
+          type: integer
+          format: int32
+          description: Identificador del horario asociado.
+        countryISO:
+          type: string
+          description: Código de país ISO2.
+          enum:
+            - PE
+            - CL
+        status:
+          type: string
+          description: Estado actual de la cita.
+          enum:
+            - pending
+            - completed
+        createdAt:
+          type: string
+          format: date-time
+          description: Fecha de creación del registro.
+        updatedAt:
+          type: string
+          format: date-time
+          description: Fecha de última actualización del registro.
+
+    AppointmentsByInsuredResponse:
+      type: object
+      properties:
+        insuredId:
+          type: string
+          description: Identificador del asegurado.
+        appointments:
+          type: array
+          items:
+            $ref: '#/components/schemas/AppointmentItem'
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Descripción del error en español.
+          example: "Se produjo un error inesperado"

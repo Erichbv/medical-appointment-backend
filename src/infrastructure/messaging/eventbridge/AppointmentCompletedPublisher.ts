@@ -38,8 +38,7 @@ export class AppointmentCompletedPublisher {
       entry.EventBusName = this.eventBusName;
     }
 
-    // Timeout de 5 segundos para evitar que se quede esperando indefinidamente
-    // si no hay conectividad desde VPC a EventBridge
+    // Timeout of 5 seconds to avoid waiting indefinitely
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => {
         reject(new Error("EventBridge publish timeout after 5 seconds"));

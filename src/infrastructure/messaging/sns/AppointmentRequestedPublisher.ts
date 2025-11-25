@@ -37,7 +37,7 @@ export class AppointmentRequestedPublisher {
       },
     };
 
-    console.log("📤 [SNS Publisher] Preparando publicación a SNS:", {
+    console.log("[SNS Publisher] Preparando publicación a SNS:", {
       topicArn: this.topicArn,
       appointmentId: appointment.appointmentId,
       insuredId: appointment.insuredId,
@@ -55,7 +55,7 @@ export class AppointmentRequestedPublisher {
         })
       );
 
-      console.log("✅ [SNS Publisher] Mensaje publicado exitosamente a SNS:", {
+      console.log("[SNS Publisher] Mensaje publicado exitosamente a SNS:", {
         messageId: result.MessageId,
         topicArn: this.topicArn,
         appointmentId: appointment.appointmentId,
@@ -63,7 +63,7 @@ export class AppointmentRequestedPublisher {
         sequenceNumber: result.SequenceNumber,
       });
     } catch (error) {
-      console.error("❌ [SNS Publisher] Error al publicar mensaje a SNS:", {
+      console.error("[SNS Publisher] Error al publicar mensaje a SNS:", {
         error: error instanceof Error ? error.message : String(error),
         errorStack: error instanceof Error ? error.stack : undefined,
         topicArn: this.topicArn,
